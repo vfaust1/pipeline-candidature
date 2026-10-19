@@ -1,0 +1,33 @@
+# --- Données personnelles : jamais dans le dépôt ---------------------------------
+# Ton CV et ton modèle de lettre (nom, téléphone, e-mail...). Le dépôt contient des versions
+# d'exemple : data/cv.example.md et data/modele_lettre.example.md.
+data/cv.md
+data/modele_lettre.md
+
+# Historique de tes recherches (offres déjà vues).
+data/offres_vues.json
+
+# Résultats : lettres, conseils CV, rapports, fiches entreprise.
+sorties/
+
+# Annonces que tu colles pour les trier.
+offre.txt
+offres_a_trier/
+
+# --- Secrets (la clé API reste dans une variable d'environnement, mais au cas où) --
+.env
+.env.*
+*.key
+
+# --- Fichiers générés -------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.tmp
+.venv/
+venv/
+
+# --- Éditeurs et système ----------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
