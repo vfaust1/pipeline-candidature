@@ -61,8 +61,11 @@ class OffresVues:
         self.offres: dict[str, dict] = {}
         if chemin.exists():
             try:
-                self.offres = json.loads(chemin.read_text(encoding="utf-8")).get("offres", {})
-            except (json.JSONDecodeError, OSError):
+                contenu = chemin.read_text(encoding="utf-8")
+                # Un fichier vide (par exemple après avoir effacé son contenu) = aucune offre vue.
+                if contenu.strip():
+                    self.offres = json.loads(contenu).get("offres", {})
+            except (json.JSONDecodeError, OSError, AttributeError):
                 raise RuntimeError(f"{chemin} est illisible : corrige-le ou supprime-le pour repartir de zéro.")
 
     def deja_vue(self, cle: str) -> bool:

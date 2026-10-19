@@ -141,6 +141,18 @@ class TestVues(unittest.TestCase):
         self.assertEqual(signature("Acme", "Stage Développeur Web (H/F)", "Lille"),
                          signature("ACME", "Développeur web", "lille"))
 
+    def test_fichier_vide_ou_absent(self):
+        with tempfile.TemporaryDirectory() as d:
+            chemin = Path(d) / "vues.json"
+            self.assertEqual(OffresVues(chemin).offres, {})            # fichier absent
+            chemin.write_text("", encoding="utf-8")
+            self.assertEqual(OffresVues(chemin).offres, {})            # fichier vide : accepté
+            chemin.write_text("  \n", encoding="utf-8")
+            self.assertEqual(OffresVues(chemin).offres, {})            # seulement des espaces
+            chemin.write_text("{pas du json", encoding="utf-8")
+            with self.assertRaises(RuntimeError):                      # contenu cassé : on prévient
+                OffresVues(chemin)
+
     def test_sauvegarde_et_relecture(self):
         with tempfile.TemporaryDirectory() as d:
             chemin = Path(d) / "vues.json"
