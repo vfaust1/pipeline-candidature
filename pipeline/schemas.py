@@ -6,6 +6,7 @@ Les étapes suivantes ne reçoivent QUE ces objets, jamais la page web brute.
 """
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field, fields
 
 
@@ -150,7 +151,7 @@ LETTRE_SCHEMA = {
         "phrase_activite": {"type": "string"},
         "raison_offre": {"type": "string"},
         "phrase_valeur": {"type": "string"},
-        "projet_choisi": {"type": "string", "enum": ["ECODROP", "PANDORA", "PORTFOLIO"]},
+        "projet_choisi": {"type": "string"},   # restreint aux projets du CV par schema_lettre()
         "phrase_projet": {"type": "string"},
         "phrase_lien_profil": {"type": "string"},
         "equipe_ou_projet_vise": {"type": "string"},
@@ -161,3 +162,11 @@ LETTRE_SCHEMA = {
     ],
     "additionalProperties": False,
 }
+
+
+def schema_lettre(projets: list[str]) -> dict:
+    """Le schéma de la lettre, avec le choix du projet limité aux projets réellement listés dans le CV."""
+    schema = copy.deepcopy(LETTRE_SCHEMA)
+    if projets:
+        schema["properties"]["projet_choisi"] = {"type": "string", "enum": list(projets)}
+    return schema

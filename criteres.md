@@ -1,6 +1,6 @@
 # Critères de recherche de stage
 
-Profil : Valentin Faust, 3e année de BUT Informatique (parcours Réalisation d'applications), IUT de Lille.
+Profil : étudiant en 3e année de BUT Informatique (parcours Réalisation d'applications), IUT de Lille.
 
 ---
 

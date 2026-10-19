@@ -18,7 +18,7 @@ import config
 
 from . import llm
 from .criteres import norm_texte
-from .schemas import LETTRE_SCHEMA, Offre
+from .schemas import Offre, schema_lettre
 
 _MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
          "août", "septembre", "octobre", "novembre", "décembre"]
@@ -28,7 +28,6 @@ _MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
 _ABSENTES_DU_CV = ["python", "c#", ".net", "php", "laravel", "symfony", "angular", "vue", "kotlin", "swift",
                    "flutter", "react native", "spring", "docker", "kubernetes", "aws", "azure", "mongodb",
                    "mysql", "django", "c++", "ruby", "rust", "jenkins", "terraform", "golang"]
-_PROJETS = ("ECODROP", "PANDORA", "PORTFOLIO")
 _MAX_MOTS = 430   # ordre de grandeur pour tenir sur une page
 
 
@@ -86,15 +85,33 @@ def _remplir(modele: str, valeurs: dict[str, str]) -> str:
     return texte
 
 
-# Dans la lettre, les projets s'écrivent EcoDrop, Pandora, portfolio (les majuscules viennent des titres du CV).
-_NOMS_PROJETS = {"ECODROP": "EcoDrop", "PANDORA": "Pandora", "PORTFOLIO": "portfolio"}
+def projets_du_cv(cv: str) -> list[str]:
+    """Noms des projets du CV : les titres « ### NOM | type » de la section « ## Projets »."""
+    section = re.search(r"^##\s*Projets\s*$(.*?)(?=^##\s|\Z)", cv, re.M | re.S)
+    if not section:
+        return []
+    noms = re.findall(r"^###\s*(.+?)\s*(?:\|.*)?$", section.group(1), re.M)
+    return [n.strip() for n in noms if n.strip()]
 
 
-def _noms_projets(texte: str) -> str:
+def _nom_affiche(nom: str) -> str:
+    """Comment écrire un nom de projet dans la lettre (tableau NOMS_PROJETS_AFFICHES de config.py)."""
+    if nom.upper() in config.NOMS_PROJETS_AFFICHES:
+        return config.NOMS_PROJETS_AFFICHES[nom.upper()]
+    return nom.capitalize() if nom.isupper() else nom
+
+
+def _noms_projets(texte: str, projets: list[str]) -> str:
+    """Remet en forme les noms de projets du CV cités dans le texte généré (« ECODROP » -> « EcoDrop »)."""
+    if not projets:
+        return texte
+    par_majuscules = {p.upper(): p for p in projets}
+    motif = r"(?<!\w)(" + "|".join(re.escape(p) for p in sorted(projets, key=len, reverse=True)) + r")(?!\w)"
+
     def remplacer(m: re.Match) -> str:
-        nom = _NOMS_PROJETS[m.group(1).upper()]
+        nom = _nom_affiche(par_majuscules[m.group(1).upper()])
         return nom[0].upper() + nom[1:] if m.start() == 0 else nom   # majuscule en début de phrase
-    return re.sub(r"\b(ECODROP|PANDORA|PORTFOLIO)\b", remplacer, texte, flags=re.IGNORECASE)
+    return re.sub(motif, remplacer, texte, flags=re.IGNORECASE)
 
 
 def _sans_point(s: str) -> str:
@@ -118,16 +135,17 @@ def _controler_phrases(ia: dict) -> list[str]:
     return alertes
 
 
-def _controler(lettre: str, projet_choisi: str, textes_ia: list[str]) -> list[str]:
+def _controler(lettre: str, projets: list[str], textes_ia: list[str]) -> list[str]:
     alertes = []
     if "{{" in lettre or "}}" in lettre:
         alertes.append("Il reste des accolades {{ }} dans la lettre.")
     mots = len(lettre.split())
     if mots > _MAX_MOTS:
         alertes.append(f"Lettre longue ({mots} mots) : elle risque de dépasser une page.")
-    cites = [p for p in _PROJETS if p in lettre.upper()]
+    cites = [p for p in projets if re.search(rf"(?<!\w){re.escape(_nom_affiche(p))}(?!\w)", lettre, re.IGNORECASE)]
     if len(cites) > 1:
-        alertes.append(f"Plus d'un projet universitaire/perso cité ({', '.join(cites)}) : la règle est maximum 2 projets au total avec SPF Connect.")
+        alertes.append(f"Plus d'un projet du CV cité ({', '.join(cites)}) : la règle est maximum 2 projets au total, "
+                       "en comptant celui du stage déjà raconté dans le modèle.")
     ia = " ".join(textes_ia).lower()
     for techno in _ABSENTES_DU_CV:
         if re.search(rf"(?<![a-z0-9]){re.escape(techno)}(?![a-z0-9])", ia):
@@ -149,18 +167,22 @@ async def rediger_lettre(offre: Offre, fiche_entreprise: str | None, cv: str, mo
         "technologies": offre.technologies, "competences_cles": offre.competences_cles,
         "resume_mission": offre.resume_mission,
     }
+    projets = projets_du_cv(cv)   # lus dans la section « ## Projets » du CV
+    liste_projets = " ; ".join(projets) if projets else "(aucun projet listé dans le CV)"
     utilisateur = (
         f"OFFRE (résumée) :\n{json.dumps(offre_resumee, ensure_ascii=False, indent=1)}\n\n"
         f"FICHE ENTREPRISE :\n{fiche_entreprise or '(aucune information supplémentaire)'}\n\n"
+        f"PROJETS DU CV (projet_choisi doit être l'un d'eux, écrit exactement ainsi) : {liste_projets}\n\n"
         f"MON CV :\n{cv}"
     )
     systeme = (config.DOSSIER_PROMPTS / "lettre.md").read_text(encoding="utf-8")
     ia = await llm.appeler(
         modele=config.MODELE_PUISSANT, system=systeme, user=utilisateur,
-        max_tokens=config.MAX_TOKENS_LETTRE, effort="medium", schema=LETTRE_SCHEMA,
+        max_tokens=config.MAX_TOKENS_LETTRE, effort="medium", schema=schema_lettre(projets),
     )
 
-    ia = {cle: (_noms_projets(v) if isinstance(v, str) and cle != "projet_choisi" else v) for cle, v in ia.items()}
+    ia = {cle: (_noms_projets(v, projets) if isinstance(v, str) and cle != "projet_choisi" else v)
+          for cle, v in ia.items()}
     phrase_projet = ia["phrase_projet"].strip()
     if not phrase_projet.endswith((".", "!", "?")):
         phrase_projet += "."
@@ -185,4 +207,4 @@ async def rediger_lettre(offre: Offre, fiche_entreprise: str | None, cv: str, mo
     lettre = _remplir(modele_lettre, valeurs)
     textes_ia = [ia[k] for k in ("phrase_activite", "raison_offre", "phrase_valeur", "phrase_projet",
                                  "phrase_lien_profil", "equipe_ou_projet_vise")]
-    return lettre, _controler_phrases(ia) + _controler(lettre, ia["projet_choisi"], textes_ia)
+    return lettre, _controler_phrases(ia) + _controler(lettre, projets, textes_ia)

@@ -101,7 +101,7 @@ python main.py tri offre.txt
 ```powershell
 python main.py lot
 ```
-1. Dépose tes annonces en `.txt` dans le dossier `offres_a_trier/`. Une annonce par fichier, ou plusieurs dans le même fichier séparées par une ligne contenant seulement `===`. Copie tout le texte de l'annonce ; mets le lien de la page sur la première ligne si tu l'as.
+1. Dépose tes annonces en `.txt` dans le dossier `offres_a_trier/`. **Ce dossier n'existe pas dans le dépôt : il est créé automatiquement** la première fois que tu lances `python main.py lot` (la commande s'arrête alors après l'avoir créé et te rappelle quoi faire). Il est ignoré par Git. Une annonce par fichier, ou plusieurs dans le même fichier séparées par une ligne contenant seulement `===`. Copie tout le texte de l'annonce ; mets le lien de la page sur la première ligne si tu l'as.
 2. Lance la commande : elle écrit `sorties/AAAA-MM-JJ/lot_HHMM/rapport.md`.
 3. Une annonce déjà traitée n'est jamais repayée, même si elle reste dans le dossier. Une même offre republiée ou trouvée sur un autre site est repérée comme doublon.
 
@@ -144,6 +144,8 @@ Quatre recherches en parallèle (stage web, stage Java, stage full stack, altern
 
 ### Les résultats : `sorties/`
 
+Ce dossier n'existe pas dans le dépôt : **il est créé automatiquement** à la première commande qui produit un résultat. Comme `offres_a_trier/` et `data/offres_vues.json`, il est ignoré par Git (voir la section 10).
+
 ```
 sorties/
 └── AAAA-MM-JJ/
@@ -180,6 +182,7 @@ Tu peux supprimer les anciens dossiers de `sorties/` sans risque.
 | `data/offres_vues.json` | La mémoire des offres déjà traitées (par adresse web, par contenu et par signature entreprise/titre/ville). Supprime-le pour repartir de zéro. Non versionné. |
 | `sorties/` | Les résultats (voir ci-dessus). Non versionnés. |
 | `.gitignore` | Liste ce que Git ne versionne pas : CV, modèle de lettre, offres, résultats, historique, clés. |
+| `LICENSE` | La licence MIT du projet. |
 
 ### Le code
 
@@ -265,7 +268,7 @@ Le **score de préférence** classe les offres d'un même groupe (technologies d
 
 ## 8. Limites à connaître
 
-- **Le projet est écrit pour un profil précis** : les noms des projets (ECODROP, PANDORA, PORTFOLIO) et quelques faits sur l'auteur sont écrits dans le code et les prompts (voir la section 9).
+- **Le projet est écrit pour un profil précis** : le nom de l'auteur et quelques faits sur ses compétences sont écrits dans les prompts, et ses critères de recherche dans `criteres.md` (voir la section 9).
 
 - Une annonce, même « Retenue », reste à vérifier à la main : durée, date de début et télétravail manquent souvent. Ouvre toujours le lien avant d'envoyer.
 - La lettre et la fiche entreprise sont des brouillons : relis chaque fait sur le site de l'entreprise.
@@ -292,23 +295,22 @@ Le projet a été écrit pour un profil précis (étudiant en BUT Informatique �
 | `criteres.md`, section 6 | **Lue par le script** : dates de début, durée, télétravail, villes de la métropole lilloise (`villes_mel`), technologies maîtrisées et à vérifier, comportement quand une information manque. À réécrire pour ton cas. |
 | `criteres.md`, sections 1 à 5 | Explications pour toi, non lues par le script. La ligne « Profil » du début cite l'auteur. |
 | `data/cv.md`, `data/modele_lettre.md` | Ton CV et ton modèle de lettre (non versionnés). Garde les emplacements `{{ ... }}` du modèle. |
-| `prompts/lettre.md` | Le nom de l'auteur, la liste de ses trois projets (ECODROP, PANDORA, PORTFOLIO) et des précisions sur ses compétences (par exemple Git, Scrum). |
+| `prompts/lettre.md` | Le nom de l'auteur et des précisions sur ses compétences (Git pratiqué au quotidien, Scrum seulement connu). À réécrire avec les tiennes. |
 | `prompts/cv.md` | Le nom de l'auteur. |
-| `pipeline/schemas.py` et `pipeline/etape3_lettre.py` | Les noms des projets (`projet_choisi`, `_PROJETS`, `_NOMS_PROJETS`) et un message d'alerte qui cite un projet de l'auteur. |
-| `config.py` | `VILLES_REQUETE` et la liste `ANGLES` (mots recherchés). |
+| `config.py` | `VILLES_REQUETE`, la liste `ANGLES` (mots recherchés) et `NOMS_PROJETS_AFFICHES` (voir ci-dessous). |
 
-Les noms de projets sont écrits en dur dans le code : si les tiens sont différents, remplace-les à ces endroits. Les rendre configurables serait une amélioration naturelle.
+**Les projets citables dans la lettre sont lus dans ton CV** : ce sont les titres `### Nom | type` de la section `## Projets` de `data/cv.md`. Le programme n'en choisit qu'un seul par lettre. `NOMS_PROJETS_AFFICHES` (`config.py`) dit comment écrire un nom dans la lettre (par exemple `ECODROP` devient `EcoDrop`) ; un nom tout en majuscules qui n'y figure pas devient « Nom », et un nom déjà normal reste tel quel. Le CV d'exemple montre le format attendu.
 
 ---
 
 ## 10. Git, confidentialité et licence
 
 - **Versionné** : le code, les prompts, les tests, `criteres.md`, les exemples (`*.example.md`) et ce README.
-- **Jamais versionné** (voir `.gitignore`) : `data/cv.md`, `data/modele_lettre.md`, `data/offres_vues.json`, `sorties/`, `offre.txt`, `offres_a_trier/`, `.env`. Ce sont tes données personnelles (CV, téléphone, e-mail), les lettres générées et les annonces que tu tries.
+- **Jamais versionné** (voir `.gitignore`) : `data/cv.md`, `data/modele_lettre.md`, `data/offres_vues.json`, `sorties/`, `offre.txt`, `offres_a_trier/`, `.env`. Ce sont tes données personnelles (CV, téléphone, e-mail), les lettres générées et les annonces que tu tries. `data/cv.md` et `data/modele_lettre.md` viennent de ta copie des exemples ; `sorties/`, `offres_a_trier/` et `data/offres_vues.json` sont **créés automatiquement** par le programme à la première utilisation, tu n'as rien à créer.
 - **Ce qui part vers l'API Anthropic** : le texte des annonces, le contenu de ton CV, des résumés d'entreprise et les requêtes de recherche web. Ne déposes pas d'informations que tu ne veux pas envoyer.
 - **La clé API** n'est jamais écrite dans un fichier : elle reste dans la variable d'environnement `ANTHROPIC_API_KEY`.
 - **Avant de rendre le dépôt public** : lance `git ls-files` et vérifie que seuls les fichiers que tu acceptes d'exposer apparaissent. Si tu as un doute sur l'historique, cherche tes données personnelles avec `git log -p`.
-- **Licence** : aucune pour l'instant, donc tous droits réservés par défaut. Ajoute un fichier `LICENSE` (par exemple MIT) si tu veux autoriser la réutilisation.
+- **Licence** : MIT (fichier `LICENSE`). Tout le monde peut utiliser, copier et modifier ce code, à condition de conserver la mention de copyright ; il est fourni sans garantie. La licence couvre le code, les prompts et les fichiers d'exemple, pas tes données personnelles (qui ne sont de toute façon pas dans le dépôt).
 
 Mettre le dépôt en ligne en privé : crée un dépôt **vide et privé** sur github.com, puis dans le dossier du projet :
 ```powershell

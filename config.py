@@ -31,6 +31,12 @@ PRIX = {
 PRIX_RECHERCHE_WEB_USD = 0.01   # 10 $ pour 1000 recherches, en plus des tokens
 USD_VERS_EUR = 0.92  # approximation, juste pour l'affichage
 
+# --- Noms de projets dans la lettre ------------------------------------------
+# Les noms des projets sont lus dans la section « ## Projets » de data/cv.md (lignes « ### NOM | type »).
+# Ce tableau dit comment les écrire dans la lettre. Un nom tout en majuscules absent d'ici devient « Nom »
+# (première lettre en majuscule). Clés en MAJUSCULES.
+NOMS_PROJETS_AFFICHES = {"ECODROP": "EcoDrop", "PANDORA": "Pandora", "PORTFOLIO": "portfolio"}
+
 # --- Limites pour maîtriser les tokens ---------------------------------------
 # Une annonce plus longue est refusée plutôt que tronquée en silence.
 MAX_CARACTERES_OFFRE = 15000

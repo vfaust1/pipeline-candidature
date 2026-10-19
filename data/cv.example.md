@@ -43,15 +43,15 @@ Conception et développement en autonomie de **GestionStock**, application web p
 
 ## Projets
 
-### ECODROP | Universitaire
+### API de réservation | Universitaire
 *2026*
-- API REST en Java EE (JDBC, PostgreSQL, architecture DAO/DTO) : gestion de ressources, de points de collecte et d'utilisateurs, authentification par token.
+- API REST en Java EE (JDBC, PostgreSQL, architecture DAO/DTO) : gestion de ressources, de réservations et d'utilisateurs, authentification par token.
 
-### PANDORA | Universitaire
+### Jeu multijoueur | Universitaire
 *2026*
-- Jeu multijoueur en temps réel (TypeScript, Node.js, Socket.io, Vite, Canvas) : salles de jeu, synchronisation client/serveur, tests unitaires.
+- Jeu en temps réel dans le navigateur (TypeScript, Node.js, Socket.io, Canvas) : salles de jeu, synchronisation client/serveur, tests unitaires.
 
-### PORTFOLIO | Personnel
+### Portfolio | Personnel
 *2026*
 - Application monopage en TypeScript (Vite) présentant mes projets et mon parcours, avec animations de transition.
 
